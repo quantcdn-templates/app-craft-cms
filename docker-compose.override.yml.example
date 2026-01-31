@@ -3,6 +3,8 @@
 
 services:
   craft:
+    ports:
+      - "8080:80"  # Use 8080 to avoid conflicts with local web servers
     environment:
       # Craft CMS Configuration
       - CRAFT_ENVIRONMENT=dev
@@ -35,6 +37,3 @@ services:
       - MYSQL_DATABASE=craft
       - MYSQL_USER=craft
       - MYSQL_PASSWORD=craft
-    ports:
-      # Expose MySQL port for local database clients
-      - "3306:3306"
