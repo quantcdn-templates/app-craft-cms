@@ -3,8 +3,6 @@
 
 services:
   craft:
-    ports:
-      - "8080:80"  # Use 8080 to avoid conflicts with local web servers
     environment:
       # Craft CMS Configuration
       - CRAFT_ENVIRONMENT=dev
