@@ -1,6 +1,6 @@
 # Craft CMS Template for Quant Cloud
 
-[![Deploy to Quant Cloud](https://img.shields.io/badge/Deploy%20to-Quant%20Cloud-blue?style=for-the-badge)](https://dashboard.quantcdn.io/deploy/step-one?template=app-craft-cms)
+[![Deploy to Quant Cloud](https://www.quantcdn.io/img/quant-deploy-btn-sml.svg)](https://dashboard.quantcdn.io/cloud-apps/create/starter-kit/app-craft-cms)
 
 A production-ready Craft CMS template for deploying to Quant Cloud.
 
