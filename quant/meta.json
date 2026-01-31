@@ -1,6 +1,6 @@
 [{
     "title": "Craft CMS",
-    "url": "/deploy/step-one?template=app-craft-cms",
+    "url": "/deploy/app/app-craft-cms",
     "summary": "A flexible, user-friendly CMS for creating custom digital experiences.",
     "content": "Deploy Craft CMS, the CMS that developers and content creators love. Features an intuitive control panel, flexible content modeling with Matrix fields, powerful templating with Twig, and a robust plugin ecosystem.",
     "image": "https://raw.githubusercontent.com/quantcdn-templates/app-craft-cms/main/quant/screenshot.png",
