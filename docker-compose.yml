@@ -1,0 +1,86 @@
+services:
+  craft:
+    image: ghcr.io/quantcdn-templates/app-craft-cms:latest
+    build: .
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      # Persistent storage for Craft CMS storage directory
+      - craft_storage:/var/www/html/storage
+      # Persistent storage for cpresources (control panel assets)
+      - craft_cpresources:/var/www/html/web/cpresources
+    environment:
+      # Craft CMS Configuration
+      - CRAFT_ENVIRONMENT=${CRAFT_ENVIRONMENT:-production}
+      - CRAFT_SECURITY_KEY=${CRAFT_SECURITY_KEY}
+      - CRAFT_APP_ID=${CRAFT_APP_ID:-CraftCMS}
+      - PRIMARY_SITE_URL=${PRIMARY_SITE_URL:-http://localhost}
+      - CRAFT_DEV_MODE=${CRAFT_DEV_MODE:-false}
+      - CRAFT_ALLOW_ADMIN_CHANGES=${CRAFT_ALLOW_ADMIN_CHANGES:-false}
+      - CRAFT_DISALLOW_ROBOTS=${CRAFT_DISALLOW_ROBOTS:-false}
+
+      # Database Configuration
+      - CRAFT_DB_DRIVER=${CRAFT_DB_DRIVER:-mysql}
+      - CRAFT_DB_SERVER=${CRAFT_DB_SERVER:-db}
+      - CRAFT_DB_PORT=${CRAFT_DB_PORT:-3306}
+      - CRAFT_DB_DATABASE=${CRAFT_DB_DATABASE:-craft}
+      - CRAFT_DB_USER=${CRAFT_DB_USER:-craft}
+      - CRAFT_DB_PASSWORD=${CRAFT_DB_PASSWORD:-craft}
+      - CRAFT_DB_SCHEMA=${CRAFT_DB_SCHEMA:-public}
+      - CRAFT_DB_TABLE_PREFIX=${CRAFT_DB_TABLE_PREFIX:-}
+
+      # SMTP Configuration
+      - QUANT_SMTP_RELAY_ENABLED=${QUANT_SMTP_RELAY_ENABLED:-false}
+      - QUANT_SMTP_HOST=${QUANT_SMTP_HOST}
+      - QUANT_SMTP_PORT=${QUANT_SMTP_PORT:-587}
+      - QUANT_SMTP_USERNAME=${QUANT_SMTP_USERNAME}
+      - QUANT_SMTP_PASSWORD=${QUANT_SMTP_PASSWORD}
+      - QUANT_SMTP_FROM=${QUANT_SMTP_FROM}
+      - QUANT_SMTP_FROM_NAME=${QUANT_SMTP_FROM_NAME}
+
+      # Debug Configuration
+      - QUANT_DEBUG=${QUANT_DEBUG:-0}
+      - LOG_DEBUG=${LOG_DEBUG:-0}
+
+      # Quant Plugin Environment Variables
+      - QUANT_ENABLED=${QUANT_ENABLED}
+      - QUANT_DISABLE_TLS_VERIFY=${QUANT_DISABLE_TLS_VERIFY}
+      - QUANT_HTTP_REQUEST_TIMEOUT=${QUANT_HTTP_REQUEST_TIMEOUT}
+      - QUANT_WEBSERVER_URL=${QUANT_WEBSERVER_URL}
+      - QUANT_WEBSERVER_HOST=${QUANT_WEBSERVER_HOST}
+      - QUANT_API_ENDPOINT=${QUANT_API_ENDPOINT}
+      - QUANT_CUSTOMER=${QUANT_CUSTOMER}
+      - QUANT_PROJECT=${QUANT_PROJECT}
+      - QUANT_TOKEN=${QUANT_TOKEN}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    depends_on:
+      - db
+
+  db:
+    labels:
+      quant.type: mysql
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpassword}
+      - MYSQL_DATABASE=${CRAFT_DB_DATABASE:-craft}
+      - MYSQL_USER=${CRAFT_DB_USER:-craft}
+      - MYSQL_PASSWORD=${CRAFT_DB_PASSWORD:-craft}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  craft_storage:
+  craft_cpresources:
+  db_data:

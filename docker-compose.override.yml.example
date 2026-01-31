@@ -1,0 +1,40 @@
+# Copy this file to docker-compose.override.yml for local development
+# docker-compose.override.yml is ignored by git for local customization
+
+services:
+  craft:
+    environment:
+      # Craft CMS Configuration
+      - CRAFT_ENVIRONMENT=dev
+      - CRAFT_SECURITY_KEY=your-security-key-here
+      - CRAFT_APP_ID=CraftCMS
+      - PRIMARY_SITE_URL=http://localhost
+      - CRAFT_DEV_MODE=true
+      - CRAFT_ALLOW_ADMIN_CHANGES=true
+      - CRAFT_DISALLOW_ROBOTS=true
+
+      # Database Configuration
+      - CRAFT_DB_DRIVER=mysql
+      - CRAFT_DB_SERVER=db
+      - CRAFT_DB_PORT=3306
+      - CRAFT_DB_DATABASE=craft
+      - CRAFT_DB_USER=craft
+      - CRAFT_DB_PASSWORD=craft
+      - CRAFT_DB_TABLE_PREFIX=
+
+      # Mail Configuration (for local testing)
+      # - QUANT_SMTP_RELAY_ENABLED=false
+      # - QUANT_SMTP_HOST=mailhog
+      # - QUANT_SMTP_PORT=1025
+      # - QUANT_SMTP_FROM=test@example.com
+      # - QUANT_SMTP_FROM_NAME="Craft CMS Test"
+
+  db:
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=craft
+      - MYSQL_USER=craft
+      - MYSQL_PASSWORD=craft
+    ports:
+      # Expose MySQL port for local database clients
+      - "3306:3306"
