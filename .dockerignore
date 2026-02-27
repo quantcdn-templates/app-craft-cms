@@ -38,7 +38,9 @@ src/storage/logs/*
 src/node_modules/
 src/vendor/
 src/.env
-src/.env.*
+src/.env.local
+src/.env.*.local
+!src/.env.example
 src/storage/runtime/*
 src/storage/logs/*
 src/storage/rebrand/*

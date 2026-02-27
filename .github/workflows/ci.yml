@@ -56,7 +56,8 @@ jobs:
         id: version
         run: |
           # Get actual installed Craft CMS version from composer.lock
-          VERSION=$(docker run --rm temp-version-check:latest php -r "
+          # Use --entrypoint to bypass Craft setup scripts that require database/env vars
+          VERSION=$(docker run --rm --entrypoint php temp-version-check:latest -r "
             \$lock = json_decode(file_get_contents('/var/www/html/composer.lock'), true);
             foreach (\$lock['packages'] ?? [] as \$pkg) {
               if (\$pkg['name'] === 'craftcms/cms') {
@@ -132,10 +133,10 @@ jobs:
           echo "Testing container startup..."
           docker run -d --name test-craft-cms \
             -p 8080:80 \
-            -e DB_SERVER=localhost \
-            -e DB_DATABASE=craft \
-            -e DB_USER=craft \
-            -e DB_PASSWORD=craft \
+            -e CRAFT_DB_SERVER=localhost \
+            -e CRAFT_DB_DATABASE=craft \
+            -e CRAFT_DB_USER=craft \
+            -e CRAFT_DB_PASSWORD=craft \
             -e CRAFT_SECURITY_KEY=test-security-key-for-ci \
             temp-version-check:latest || true
 

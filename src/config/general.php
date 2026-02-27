@@ -32,8 +32,8 @@ return GeneralConfig::create()
     ->maxUploadFileSize('100M')
     // Set the default image quality
     ->defaultImageQuality(82)
-    // Use PHP 8+ query string parsing
+    // Disable iFrame Resizer for Live Preview (not needed for same-origin previews)
     ->useIframeResizer(false)
     // Security key (should be set via environment variable)
-    ->securityKey(App::env('CRAFT_SECURITY_KEY'))
+    ->securityKey(App::env('CRAFT_SECURITY_KEY') ?? '')
 ;

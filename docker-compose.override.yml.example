@@ -3,6 +3,8 @@
 
 services:
   craft:
+    ports:
+      - "8088:80"
     environment:
       # Craft CMS Configuration
       - CRAFT_ENVIRONMENT=dev
