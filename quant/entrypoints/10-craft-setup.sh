@@ -13,6 +13,22 @@ if [ ! -f .env ]; then
     cp .env.example .env 2>/dev/null || true
 fi
 
+# On Quant Cloud the managed database arrives as DB_*. Craft reads CRAFT_DB_*
+# (from .env or the process environment) ahead of config/db.php, so write the
+# injected values into .env. Local development keeps the .env.example values.
+if [ -n "${DB_HOST:-}" ]; then
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] Pointing Craft at the managed database ${DB_HOST}..." >&2
+    set_env() { # set_env KEY VALUE - replace or append KEY in .env
+        if grep -qE "^$1=" .env; then sed -i "s|^$1=.*|$1=$2|" .env; else printf '%s=%s\n' "$1" "$2" >> .env; fi
+    }
+    set_env CRAFT_DB_DRIVER "${DB_ENGINE:-mysql}"
+    set_env CRAFT_DB_SERVER "${DB_HOST}"
+    set_env CRAFT_DB_PORT "${DB_PORT:-3306}"
+    set_env CRAFT_DB_DATABASE "${DB_DATABASE}"
+    set_env CRAFT_DB_USER "${DB_USERNAME}"
+    set_env CRAFT_DB_PASSWORD "${DB_PASSWORD}"
+fi
+
 # Ensure storage directories exist with correct permissions
 # These subdirectories are required by Craft and may be lost on fresh volume mounts
 mkdir -p /var/www/html/storage/runtime /var/www/html/storage/logs \
@@ -24,7 +40,8 @@ chmod -R 775 /var/www/html/storage /var/www/html/web/cpresources /var/www/html/c
 # Wait for database to be ready (max 30 seconds)
 echo "[$(date +'%Y-%m-%d %H:%M:%S')] Waiting for database..." >&2
 for i in $(seq 1 30); do
-    if php craft db/check 2>/dev/null; then
+    # `craft db/check` does not exist; probe with PDO using the same settings Craft will use.
+    if php -r 'require "vendor/autoload.php"; $c = require "config/db.php"; new PDO("mysql:host=".$c["server"].";port=".$c["port"].";dbname=".$c["database"], $c["user"], $c["password"], [PDO::ATTR_TIMEOUT => 3]);' 2>/dev/null; then
         echo "[$(date +'%Y-%m-%d %H:%M:%S')] Database is ready" >&2
         break
     fi

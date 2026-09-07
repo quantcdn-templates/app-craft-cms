@@ -30,14 +30,10 @@ services:
       - CRAFT_SITE_NAME=${CRAFT_SITE_NAME:-Craft CMS}
 
       # Database Configuration
-      - CRAFT_DB_DRIVER=${CRAFT_DB_DRIVER:-mysql}
-      - CRAFT_DB_SERVER=${CRAFT_DB_SERVER:-db}
-      - CRAFT_DB_PORT=${CRAFT_DB_PORT:-3306}
-      - CRAFT_DB_DATABASE=${CRAFT_DB_DATABASE:-craft}
-      - CRAFT_DB_USER=${CRAFT_DB_USER:-craft}
-      - CRAFT_DB_PASSWORD=${CRAFT_DB_PASSWORD:-craft}
-      - CRAFT_DB_SCHEMA=${CRAFT_DB_SCHEMA:-public}
-      - CRAFT_DB_TABLE_PREFIX=${CRAFT_DB_TABLE_PREFIX:-}
+      # Database settings are NOT set here on purpose. Craft applies CRAFT_DB_*
+      # environment variables over config/db.php, so a value like CRAFT_DB_SERVER=db
+      # would override the DB_HOST that Quant Cloud injects. Locally they come from
+      # .env (copied from .env.example) or docker-compose.override.yml.
 
       # SMTP Configuration
       - QUANT_SMTP_RELAY_ENABLED=${QUANT_SMTP_RELAY_ENABLED:-false}
