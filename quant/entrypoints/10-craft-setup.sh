@@ -13,20 +13,14 @@ if [ ! -f .env ]; then
     cp .env.example .env 2>/dev/null || true
 fi
 
-# On Quant Cloud the managed database arrives as DB_*. Craft reads CRAFT_DB_*
-# (from .env or the process environment) ahead of config/db.php, so write the
-# injected values into .env. Local development keeps the .env.example values.
+# On Quant Cloud the managed database arrives as DB_*, which config/db.php
+# reads directly. Craft applies any CRAFT_DB_* it finds (process environment
+# or .env) over that file, so remove the local-development values from .env.
+# The password is never written to disk: generated passwords contain
+# characters like & # $ that break both sed and unquoted dotenv values.
 if [ -n "${DB_HOST:-}" ]; then
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] Pointing Craft at the managed database ${DB_HOST}..." >&2
-    set_env() { # set_env KEY VALUE - replace or append KEY in .env
-        if grep -qE "^$1=" .env; then sed -i "s|^$1=.*|$1=$2|" .env; else printf '%s=%s\n' "$1" "$2" >> .env; fi
-    }
-    set_env CRAFT_DB_DRIVER "${DB_ENGINE:-mysql}"
-    set_env CRAFT_DB_SERVER "${DB_HOST}"
-    set_env CRAFT_DB_PORT "${DB_PORT:-3306}"
-    set_env CRAFT_DB_DATABASE "${DB_DATABASE}"
-    set_env CRAFT_DB_USER "${DB_USERNAME}"
-    set_env CRAFT_DB_PASSWORD "${DB_PASSWORD}"
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] Using the managed database at ${DB_HOST} (DB_* via config/db.php)..." >&2
+    sed -i '/^CRAFT_DB_/d' .env
 fi
 
 # Ensure storage directories exist with correct permissions
