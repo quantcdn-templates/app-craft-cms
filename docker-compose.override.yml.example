@@ -9,6 +9,7 @@ services:
       # Craft CMS Configuration
       - CRAFT_ENVIRONMENT=dev
       - CRAFT_SECURITY_KEY=your-security-key-here
+      - CRAFT_ADMIN_PASSWORD=change-me-locally
       - CRAFT_APP_ID=CraftCMS
       - PRIMARY_SITE_URL=http://localhost
       - CRAFT_DEV_MODE=true

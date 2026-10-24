@@ -7,6 +7,9 @@ echo "[$(date +'%Y-%m-%d %H:%M:%S')] Running Craft CMS setup..." >&2
 
 cd /var/www/html || exit 1
 
+# Stop early when the security key is missing or is a known example value.
+require_secret CRAFT_SECURITY_KEY
+
 # Ensure .env exists (copy from .env.example if missing)
 if [ ! -f .env ]; then
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] Creating .env from .env.example..." >&2
@@ -49,10 +52,11 @@ done
 if php craft install/check 2>/dev/null; then
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] Craft CMS is already installed" >&2
 else
+    require_secret CRAFT_ADMIN_PASSWORD
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] Installing Craft CMS..." >&2
     php craft install \
         --username="${CRAFT_ADMIN_USERNAME:-admin}" \
-        --password="${CRAFT_ADMIN_PASSWORD:-password}" \
+        --password="${CRAFT_ADMIN_PASSWORD}" \
         --email="${CRAFT_ADMIN_EMAIL:-admin@example.com}" \
         --site-name="${CRAFT_SITE_NAME:-Craft CMS}" \
         --site-url="${PRIMARY_SITE_URL:-http://localhost}" \

@@ -6,5 +6,19 @@
     "categories": ["cms", "php"],
     "tags": ["craft", "cms", "php", "yii", "twig"],
     "template_type": "app",
-    "requires_db": true
+    "requires_db": true,
+    "secrets": [
+        {
+            "name": "CRAFT_SECURITY_KEY",
+            "description": "Craft security key used for hashing and encryption",
+            "generate": "random",
+            "length": 48
+        },
+        {
+            "name": "CRAFT_ADMIN_PASSWORD",
+            "description": "Initial admin password. Change it after first login.",
+            "generate": "random",
+            "length": 24
+        }
+    ]
 }]
