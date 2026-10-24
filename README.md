@@ -31,12 +31,13 @@ Click the deploy button above to deploy this template directly to Quant Cloud.
    cp docker-compose.override.yml.example docker-compose.override.yml
    ```
 
-3. Generate a security key:
+3. Set your own secrets in `docker-compose.override.yml`. The container does not
+   start while `CRAFT_SECURITY_KEY` or `CRAFT_ADMIN_PASSWORD` is empty or still holds
+   an example value. Generate the values with:
    ```bash
-   # Use any secure random string generator
-   openssl rand -base64 32
+   openssl rand -hex 24   # CRAFT_SECURITY_KEY
+   openssl rand -hex 12   # CRAFT_ADMIN_PASSWORD
    ```
-   Add the generated key to your `docker-compose.override.yml` as `CRAFT_SECURITY_KEY`.
 
 4. Start the containers:
    ```bash
@@ -47,7 +48,19 @@ Click the deploy button above to deploy this template directly to Quant Cloud.
    - **Site**: http://localhost
    - **Control Panel**: http://localhost/admin
 
-6. Complete the Craft CMS installation through the web installer.
+6. Craft installs on first start with the admin user and password you set. Sign in
+   at the control panel and change the password.
+
+### Secrets on Quant Cloud
+
+On Quant Cloud, `CRAFT_SECURITY_KEY` and `CRAFT_ADMIN_PASSWORD` are generated when you
+deploy and are stored as application secrets. Read `CRAFT_ADMIN_PASSWORD` from the
+application secrets for the first login, then change it in the control panel.
+An existing site that still holds an earlier example value must set a new secret
+before the container starts.
+
+Warning: do not change `CRAFT_SECURITY_KEY` on a live site. Craft cannot read data that it
+encrypted with the old key. Enter the affected settings again after any key change.
 
 ## Configuration
 
@@ -56,7 +69,8 @@ Click the deploy button above to deploy this template directly to Quant Cloud.
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `CRAFT_ENVIRONMENT` | Environment name (dev, staging, production) | `production` |
-| `CRAFT_SECURITY_KEY` | Security key for encryption (required) | - |
+| `CRAFT_SECURITY_KEY` | Security key for encryption (required, generated on Quant Cloud) | - |
+| `CRAFT_ADMIN_PASSWORD` | Initial admin password, used on first install only (required, generated on Quant Cloud) | - |
 | `CRAFT_APP_ID` | Application ID | `CraftCMS` |
 | `CRAFT_DEV_MODE` | Enable development mode | `false` |
 | `CRAFT_ALLOW_ADMIN_CHANGES` | Allow admin changes | `false` |
@@ -82,6 +96,8 @@ app-craft-cms/
 ├── Dockerfile                  # Docker image definition
 ├── docker-compose.yml          # Production configuration
 ├── docker-compose.override.yml.example  # Local dev template
+├── scripts/lint-compose-secrets.sh  # Rejects literal secrets in compose files
+├── tests/                      # Secret guard and lint tests
 ├── quant/
 │   ├── meta.json               # Quant Cloud metadata
 │   ├── entrypoints.sh          # Container entrypoint script

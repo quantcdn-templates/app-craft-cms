@@ -7,6 +7,9 @@ echo "[$(date +'%Y-%m-%d %H:%M:%S')] Running Craft CMS setup..." >&2
 
 cd /var/www/html || exit 1
 
+# Stop early when the security key is missing or is a known example value.
+require_secret CRAFT_SECURITY_KEY
+
 # Ensure .env exists (copy from .env.example if missing)
 if [ ! -f .env ]; then
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] Creating .env from .env.example..." >&2
@@ -33,10 +36,12 @@ chmod -R 775 /var/www/html/storage /var/www/html/web/cpresources /var/www/html/c
 
 # Wait for database to be ready (max 30 seconds)
 echo "[$(date +'%Y-%m-%d %H:%M:%S')] Waiting for database..." >&2
+DB_READY=0
 for i in $(seq 1 30); do
     # `craft db/check` does not exist; probe with PDO using the same settings Craft will use.
     if php -r 'require "vendor/autoload.php"; $c = require "config/db.php"; new PDO("mysql:host=".$c["server"].";port=".$c["port"].";dbname=".$c["database"], $c["user"], $c["password"], [PDO::ATTR_TIMEOUT => 3]);' 2>/dev/null; then
         echo "[$(date +'%Y-%m-%d %H:%M:%S')] Database is ready" >&2
+        DB_READY=1
         break
     fi
     if [ "$i" -eq 30 ]; then
@@ -45,14 +50,18 @@ for i in $(seq 1 30); do
     sleep 1
 done
 
-# Check if Craft is already installed
-if php craft install/check 2>/dev/null; then
+# Check if Craft is already installed. Skip the install when the database never
+# became ready, so a slow database does not stop an installed site.
+if [ "$DB_READY" -ne 1 ]; then
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] WARNING: Skipping the install check because the database is not ready" >&2
+elif php craft install/check 2>/dev/null; then
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] Craft CMS is already installed" >&2
 else
+    require_secret CRAFT_ADMIN_PASSWORD
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] Installing Craft CMS..." >&2
     php craft install \
         --username="${CRAFT_ADMIN_USERNAME:-admin}" \
-        --password="${CRAFT_ADMIN_PASSWORD:-password}" \
+        --password="${CRAFT_ADMIN_PASSWORD}" \
         --email="${CRAFT_ADMIN_EMAIL:-admin@example.com}" \
         --site-name="${CRAFT_SITE_NAME:-Craft CMS}" \
         --site-url="${PRIMARY_SITE_URL:-http://localhost}" \

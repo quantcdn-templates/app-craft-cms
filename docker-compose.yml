@@ -16,7 +16,6 @@ services:
     environment:
       # Craft CMS Configuration
       - CRAFT_ENVIRONMENT=${CRAFT_ENVIRONMENT:-production}
-      - CRAFT_SECURITY_KEY=${CRAFT_SECURITY_KEY:-c92384d64f2ccff742df0b3df0b3409dd233c6a42dc9304104456e402b7144a5}
       - CRAFT_APP_ID=${CRAFT_APP_ID:-CraftCMS}
       - PRIMARY_SITE_URL=${PRIMARY_SITE_URL:-http://localhost}
       - CRAFT_DEV_MODE=${CRAFT_DEV_MODE:-false}
@@ -25,7 +24,6 @@ services:
 
       # Initial Admin Account (used during first install only)
       - CRAFT_ADMIN_USERNAME=${CRAFT_ADMIN_USERNAME:-admin}
-      - CRAFT_ADMIN_PASSWORD=${CRAFT_ADMIN_PASSWORD:-password}
       - CRAFT_ADMIN_EMAIL=${CRAFT_ADMIN_EMAIL:-admin@example.com}
       - CRAFT_SITE_NAME=${CRAFT_SITE_NAME:-Craft CMS}
 
