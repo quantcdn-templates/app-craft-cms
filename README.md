@@ -59,6 +59,9 @@ application secrets for the first login, then change it in the control panel.
 An existing site that still holds an earlier example value must set a new secret
 before the container starts.
 
+Warning: do not change `CRAFT_SECURITY_KEY` on a live site. Craft cannot read data that it
+encrypted with the old key. Enter the affected settings again after any key change.
+
 ## Configuration
 
 ### Environment Variables

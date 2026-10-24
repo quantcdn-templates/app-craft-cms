@@ -3,7 +3,8 @@
 cd "$(dirname "$0")/.." || exit 1
 
 LINT=scripts/lint-compose-secrets.sh
-REF="${OLD_REF:-origin/main}"
+# Last commit that shipped the old defaults; CI needs full history (fetch-depth: 0).
+REF="${OLD_REF:-0aa39db7861ff88aff75a63c8f7ad8d412126cbd}"
 FAILS=0
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
@@ -25,13 +26,12 @@ sample() { # sample NAME : body from stdin
 
 test -f "$LINT" || { fail "lint missing: $LINT"; echo "$FAILS failure(s)"; exit 1; }
 
-if git show "$REF:docker-compose.yml" > "$TMP/old.yml" 2>/dev/null \
-    && grep -qE '(KEY|PASSWORD)=\$\{[A-Z_]+:-.+\}' "$TMP/old.yml"; then
+if git show "$REF:docker-compose.yml" > "$TMP/old.yml" 2>/dev/null; then
     expect_rc "old compose is flagged" 1 "$TMP/old.yml"
     # The report names the variable and never the value.
     if grep -q 'CRAFT_SECURITY_KEY has a literal value' "$TMP/out"; then pass "report names variable"; else fail "report names variable"; fi
 else
-    skip "old compose is flagged (no old default at $REF)"
+    fail "old compose readable at $REF (fetch full history)"
 fi
 
 expect_rc "new compose passes" 0 docker-compose.yml

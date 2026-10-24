@@ -1,54 +1,58 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
+# Fail when a compose service carries a literal or non-empty default value for a
+# secret-like environment variable. Services with a quant.type label are
+# platform-managed and out of scope.
 # Usage: lint-compose-secrets.sh <compose-file>...
-#
-# Fails (exit 1) when an environment entry whose name matches
-# (KEY|SECRET|PASSWORD|PASS|TOKEN|SALT), case-insensitive, has a literal value
-# or a ${VAR:-non-empty} default. Empty values, ${VAR} and ${VAR:-} pass.
-# Services with a quant.type label are platform-managed and are skipped.
-# The report names the file, line and variable. It never prints the value.
+# Prints "file:line: VAR has a literal value" per violation to stdout.
+# Exit 0 when clean, 1 when any violation is found, 2 on a usage error.
+
+NAME_RE='(key|secret|password|pass|token|salt)'
 
 lint_file() {
-    awk -v file="$1" '
-    function flush(   i) {
-        if (!managed) for (i = 1; i <= n; i++) print file ":" ln[i] ": " nm[i] " has a literal value"
-        n = 0; managed = 0
-    }
+  awk -v file="$1" -v name_re="$NAME_RE" '
+    function indent(s) { match(s, /^ */); return RLENGTH }
+    function strip(v) { gsub(/^[ \t]+|[ \t]+$/, "", v); gsub(/^["\047]|["\047]$/, "", v); return v }
     function is_literal(v) {
-        sub(/^[ \t]+/, "", v); sub(/[ \t\r]+$/, "", v)
-        gsub(/^["\x27]|["\x27]$/, "", v)
-        if (v == "") return 0
-        if (v ~ /^\$\{[A-Za-z_0-9]+\}$/) return 0
-        if (v ~ /^\$\{[A-Za-z_0-9]+:-\}$/) return 0
-        return 1
+      if (v == "") return 0
+      if (v ~ /^\$\{[A-Za-z_][A-Za-z0-9_]*(:-)?\}$/) return 0
+      if (v ~ /^\$\{[A-Za-z_][A-Za-z0-9_]*:?[?+]/) return 0
+      if (v ~ /^\$[A-Za-z_][A-Za-z0-9_]*$/) return 0
+      return 1
     }
-    function check(name, val) {
-        if (toupper(name) ~ /(KEY|SECRET|PASSWORD|PASS|TOKEN|SALT)/ && is_literal(val)) {
-            n++; nm[n] = name; ln[n] = NR
-        }
+    function flush(  i) {
+      if (!managed) for (i = 1; i <= n; i++) { print file ":" ln[i] ": " nm[i] " has a literal value"; violations++ }
+      n = 0; managed = 0
     }
-    /^[^ #]/ { flush(); in_services = ($0 ~ /^services:/); next }
-    in_services && /^  [A-Za-z0-9_.-]+:[ \t]*$/ { flush(); next }
-    /quant\.type[ \t]*[:=]/ { managed = 1 }
-    /^[ \t]*-[ \t]*[A-Za-z_][A-Za-z_0-9]*=/ {
-        line = $0; sub(/^[ \t]*-[ \t]*/, "", line)
-        eq = index(line, "="); check(substr(line, 1, eq - 1), substr(line, eq + 1)); next
+    function record(lineno, name, value) {
+      if (tolower(name) ~ name_re && is_literal(strip(value))) { n++; ln[n] = lineno; nm[n] = name }
     }
-    /^[ \t]+[A-Za-z_][A-Za-z_0-9]*:[ \t]+[^ \t]/ {
-        line = $0; sub(/^[ \t]+/, "", line)
-        c = index(line, ":"); check(substr(line, 1, c - 1), substr(line, c + 1))
+    function handle_env(line, lineno,  body, p, sep) {
+      body = line; sub(/^ *(- +)?/, "", body)
+      sep = (line ~ /^ *- /) ? "=" : ":"
+      p = index(body, sep)
+      if (p > 0) record(lineno, substr(body, 1, p - 1), substr(body, p + 1))
     }
-    END { flush() }
-    ' "$1"
+    /^[ \t]*(#|$)/ { next }
+    /^services:/ { in_services = 1; next }
+    /^[^ ]/ { if (in_services) flush(); in_services = 0; env = 0; next }
+    !in_services { next }
+    indent($0) == 2 && /:[ \t]*$/ { flush(); env = 0; next }
+    /quant\.type/ { managed = 1 }
+    env && indent($0) <= env_indent { env = 0 }
+    env { handle_env($0, NR); next }
+    /^ *environment:[ \t]*$/ { env = 1; env_indent = indent($0) }
+    END { flush(); exit (violations > 0) ? 1 : 0 }
+  ' "$1"
 }
 
 main() {
-    local out rc=0 f
-    for f in "$@"; do
-        out=$(lint_file "$f")
-        if [ -n "$out" ]; then printf '%s\n' "$out"; rc=1; fi
-    done
-    return "$rc"
+  local rc=0 out f
+  for f in "$@"; do
+    out=$(lint_file "$f") || rc=1
+    [ -z "$out" ] || printf '%s\n' "$out"
+  done
+  return "$rc"
 }
 
+[ "$#" -gt 0 ] || { echo "Usage: $0 <compose-file>..." >&2; exit 2; }
 main "$@"

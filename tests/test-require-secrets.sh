@@ -5,7 +5,8 @@
 cd "$(dirname "$0")/.." || exit 1
 
 GUARD=quant/entrypoints/05-require-secrets.sh
-REF="${OLD_REF:-origin/main}"
+# Last commit that shipped the old defaults; CI needs full history (fetch-depth: 0).
+REF="${OLD_REF:-0aa39db7861ff88aff75a63c8f7ad8d412126cbd}"
 FAILS=0
 ERR=$(mktemp)
 trap 'rm -f "$ERR"' EXIT
@@ -41,7 +42,7 @@ old_value() { # old_value FILE SED-EXPR : prints nothing on a miss
 test_old_default() { # label NAME FILE SED-EXPR
     local value
     value=$(old_value "$3" "$4")
-    if [ -z "$value" ]; then skip "$1 (no old value at $REF)"; return; fi
+    if [ -z "$value" ]; then fail "$1 (old value is empty at $REF)"; return; fi
     expect_refused "$1" "$2" "$2=$value"
 }
 
@@ -68,5 +69,11 @@ if env -i PATH="$PATH" bash -c ". $GUARD" 2>/dev/null; then pass "sourcing defin
 
 if grep -E '^CRAFT_SECURITY_KEY=.+' src/.env.example >/dev/null; then fail "env example has no key value"; else pass "env example has no key value"; fi
 if grep -F 'CRAFT_ADMIN_PASSWORD:-' quant/entrypoints/10-craft-setup.sh >/dev/null; then fail "install uses no password fallback"; else pass "install uses no password fallback"; fi
+
+# Structural check: the install branch (and its password guard) is reached only after the database gate.
+SETUP=quant/entrypoints/10-craft-setup.sh
+GATE=$(grep -n 'DB_READY" -ne 1' "$SETUP" | head -1 | cut -d: -f1)
+REQ=$(grep -n 'require_secret CRAFT_ADMIN_PASSWORD' "$SETUP" | head -1 | cut -d: -f1)
+if [ -n "$GATE" ] && [ -n "$REQ" ] && [ "$GATE" -lt "$REQ" ]; then pass "install is gated on database readiness"; else fail "install is gated on database readiness"; fi
 
 [ "$FAILS" -eq 0 ] && echo "All passed" || { echo "$FAILS failure(s)"; exit 1; }
