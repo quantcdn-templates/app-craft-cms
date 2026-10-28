@@ -4,6 +4,7 @@ x-quant-labels:
 
 services:
   craft:
+    image: ghcr.io/quantcdn-templates/app-craft-cms:latest
     build: .
     restart: unless-stopped
     ports:
