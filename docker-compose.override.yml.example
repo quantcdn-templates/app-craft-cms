@@ -15,6 +15,8 @@ services:
       - CRAFT_ALLOW_ADMIN_CHANGES=true
       - CRAFT_DISALLOW_ROBOTS=true
 
+      - DISABLE_DB_TLS=true
+
       # Database Configuration
       - CRAFT_DB_DRIVER=mysql
       - CRAFT_DB_SERVER=db

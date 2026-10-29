@@ -15,6 +15,13 @@
 use craft\helpers\App;
 
 return [
+    // Shared with Drupal: managed database TLS verifies the server certificate.
+    'attributes' => (App::env('CRAFT_DB_DRIVER') ?: 'mysql') === 'mysql' &&
+        App::env('DISABLE_DB_TLS') !== 'true' && App::env('DISABLE_DB_TLS') !== true
+        ? [
+            PDO::MYSQL_ATTR_SSL_CA => '/opt/rds-ca-certs/rds-ca-cert-bundle.pem',
+            PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
+        ] : [],
     'driver' => App::env('CRAFT_DB_DRIVER') ?: 'mysql',
     'server' => App::env('DB_HOST') ?: App::env('CRAFT_DB_SERVER') ?: 'localhost',
     'port' => App::env('DB_PORT') ?: App::env('CRAFT_DB_PORT') ?: 3306,
