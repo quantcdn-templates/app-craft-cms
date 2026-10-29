@@ -151,3 +151,9 @@ Configure these in your GitHub repository settings:
 ## License
 
 This template is open-source. Craft CMS itself requires a license for pro features.
+
+## Managed database TLS
+
+Managed database connections verify the server certificate using the shared
+`/opt/rds-ca-certs/rds-ca-cert-bundle.pem` trust bundle, matching Drupal.
+Set `DISABLE_DB_TLS=true` only for a local development database.
