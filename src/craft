@@ -10,9 +10,12 @@ define('CRAFT_VENDOR_PATH', CRAFT_BASE_PATH . '/vendor');
 // Composer autoloader
 require_once CRAFT_VENDOR_PATH . '/autoload.php';
 
-// Load environment variables
+// Load environment variables. Immutable: a variable that is already set (Quant
+// Cloud secrets and variables, docker compose `environment:`) wins over .env,
+// which only fills in what is missing. The entrypoint creates .env from
+// .env.example, so a mutable load would replace those values with local defaults.
 if (class_exists('Dotenv\Dotenv') && file_exists(CRAFT_BASE_PATH . '/.env')) {
-    Dotenv\Dotenv::createUnsafeMutable(CRAFT_BASE_PATH)->safeLoad();
+    Dotenv\Dotenv::createUnsafeImmutable(CRAFT_BASE_PATH)->safeLoad();
 }
 
 // Bootstrap Craft
