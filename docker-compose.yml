@@ -17,7 +17,10 @@ services:
     environment:
       # Craft CMS Configuration
       - CRAFT_ENVIRONMENT=${CRAFT_ENVIRONMENT:-production}
-      - CRAFT_SECURITY_KEY=${CRAFT_SECURITY_KEY:-c92384d64f2ccff742df0b3df0b3409dd233c6a42dc9304104456e402b7144a5}
+      # NOTE: CRAFT_SECURITY_KEY must NOT be set here. Quant Cloud generates it as a
+      # secret (see quant/meta.json) and injects it. A value here would override it, and
+      # a fixed value would be shared by every site made from this template.
+      # For local development, set CRAFT_SECURITY_KEY in docker-compose.override.yml.
       - CRAFT_APP_ID=${CRAFT_APP_ID:-CraftCMS}
       - PRIMARY_SITE_URL=${PRIMARY_SITE_URL:-http://localhost}
       - CRAFT_DEV_MODE=${CRAFT_DEV_MODE:-false}
