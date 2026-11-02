@@ -47,15 +47,18 @@ Click the deploy button above to deploy this template directly to Quant Cloud.
    - **Site**: http://localhost
    - **Control Panel**: http://localhost/admin
 
-6. Complete the Craft CMS installation through the web installer.
+6. Log in as `admin`. If you did not set `CRAFT_ADMIN_PASSWORD` in `docker-compose.override.yml`, the first start generates a password and writes it to the log (`docker-compose logs craft | grep 'admin password'`).
 
 ## Secrets on Quant Cloud
 
-When you deploy this template from the Quant dashboard, Quant Cloud generates `CRAFT_SECURITY_KEY` as a secret for the production environment (see `quant/meta.json`). Each site gets its own key.
+When you deploy this template from the Quant dashboard, Quant Cloud generates these secrets for the production environment (see `quant/meta.json`):
 
-Do not set `CRAFT_SECURITY_KEY` in `docker-compose.yml`. A value there overrides the generated secret, and every site from this template would share it.
+- `CRAFT_SECURITY_KEY`: a unique key for each site.
+- `CRAFT_ADMIN_PASSWORD`: the password of the first admin account (`admin`). The dashboard shows it to you **once**, at the end of the deployment. Save it, then change it after you log in.
 
-If you deploy without the dashboard (for example, from your own GitHub workflow), set `CRAFT_SECURITY_KEY` as a secret on each environment before the first deployment (`openssl rand -hex 32`). A new environment does not copy secrets from production: set its secrets before you deploy it.
+Do not set these variables in `docker-compose.yml`. A value there overrides the generated secret, and every site from this template would share it.
+
+If you deploy without the dashboard (for example, from your own GitHub workflow), set `CRAFT_SECURITY_KEY` as a secret on each environment before the first deployment (`openssl rand -hex 32`). If `CRAFT_ADMIN_PASSWORD` is not set, the first start generates a password and writes it to the container log. A new environment does not copy secrets from production: set its secrets before you deploy it.
 
 To make a new security key, set a new `CRAFT_SECURITY_KEY` secret and redeploy. This ends all sessions, and data that Craft encrypted with the old key cannot be read.
 
@@ -67,6 +70,9 @@ To make a new security key, set a new `CRAFT_SECURITY_KEY` secret and redeploy. 
 |----------|-------------|---------|
 | `CRAFT_ENVIRONMENT` | Environment name (dev, staging, production) | `production` |
 | `CRAFT_SECURITY_KEY` | Security key for encryption (required, generated on Quant Cloud) | - |
+| `CRAFT_ADMIN_USERNAME` | Username of the first admin account | `admin` |
+| `CRAFT_ADMIN_PASSWORD` | Password of the first admin account (first install only, generated on Quant Cloud) | generated, written to the log |
+| `CRAFT_ADMIN_EMAIL` | Email of the first admin account | `admin@example.com` |
 | `CRAFT_APP_ID` | Application ID | `CraftCMS` |
 | `CRAFT_DEV_MODE` | Enable development mode | `false` |
 | `CRAFT_ALLOW_ADMIN_CHANGES` | Allow admin changes | `false` |

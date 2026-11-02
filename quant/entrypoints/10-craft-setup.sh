@@ -50,9 +50,17 @@ if php craft install/check 2>/dev/null; then
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] Craft CMS is already installed" >&2
 else
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] Installing Craft CMS..." >&2
+    # Never install with a known password. Quant Cloud sets CRAFT_ADMIN_PASSWORD as a
+    # generated secret (quant/meta.json). Without it, generate one and log it once.
+    ADMIN_PASSWORD="${CRAFT_ADMIN_PASSWORD:-}"
+    if [ -z "$ADMIN_PASSWORD" ]; then
+        ADMIN_PASSWORD="$(head -c 18 /dev/urandom | base64 | tr -d '/+=')"
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] CRAFT_ADMIN_PASSWORD is not set. Generated admin password for '${CRAFT_ADMIN_USERNAME:-admin}': ${ADMIN_PASSWORD}" >&2
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] Change it after you log in." >&2
+    fi
     php craft install \
         --username="${CRAFT_ADMIN_USERNAME:-admin}" \
-        --password="${CRAFT_ADMIN_PASSWORD:-password}" \
+        --password="${ADMIN_PASSWORD}" \
         --email="${CRAFT_ADMIN_EMAIL:-admin@example.com}" \
         --site-name="${CRAFT_SITE_NAME:-Craft CMS}" \
         --site-url="${PRIMARY_SITE_URL:-http://localhost}" \
