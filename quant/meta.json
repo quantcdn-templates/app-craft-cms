@@ -13,6 +13,14 @@
             "description": "Craft CMS security key (generated per site)",
             "generate": "random",
             "length": 64
+        },
+        {
+            "name": "CRAFT_ADMIN_PASSWORD",
+            "description": "Password of the first Craft admin account (user: admin). Used at the first install only.",
+            "generate": "random",
+            "length": 24,
+            "reveal": "once",
+            "label": "Craft CMS admin password (username: admin)"
         }
     ]
 }]
