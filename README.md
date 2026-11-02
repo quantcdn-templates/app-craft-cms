@@ -49,6 +49,16 @@ Click the deploy button above to deploy this template directly to Quant Cloud.
 
 6. Complete the Craft CMS installation through the web installer.
 
+## Secrets on Quant Cloud
+
+When you deploy this template from the Quant dashboard, Quant Cloud generates `CRAFT_SECURITY_KEY` as a secret for the production environment (see `quant/meta.json`). Each site gets its own key.
+
+Do not set `CRAFT_SECURITY_KEY` in `docker-compose.yml`. A value there overrides the generated secret, and every site from this template would share it.
+
+If you deploy without the dashboard (for example, from your own GitHub workflow), set `CRAFT_SECURITY_KEY` as a secret on each environment before the first deployment (`openssl rand -hex 32`). A new environment does not copy secrets from production: set its secrets before you deploy it.
+
+To make a new security key, set a new `CRAFT_SECURITY_KEY` secret and redeploy. This ends all sessions, and data that Craft encrypted with the old key cannot be read.
+
 ## Configuration
 
 ### Environment Variables
@@ -56,7 +66,7 @@ Click the deploy button above to deploy this template directly to Quant Cloud.
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `CRAFT_ENVIRONMENT` | Environment name (dev, staging, production) | `production` |
-| `CRAFT_SECURITY_KEY` | Security key for encryption (required) | - |
+| `CRAFT_SECURITY_KEY` | Security key for encryption (required, generated on Quant Cloud) | - |
 | `CRAFT_APP_ID` | Application ID | `CraftCMS` |
 | `CRAFT_DEV_MODE` | Enable development mode | `false` |
 | `CRAFT_ALLOW_ADMIN_CHANGES` | Allow admin changes | `false` |
