@@ -29,7 +29,9 @@ services:
 
       # Initial Admin Account (used during first install only)
       - CRAFT_ADMIN_USERNAME=${CRAFT_ADMIN_USERNAME:-admin}
-      - CRAFT_ADMIN_PASSWORD=${CRAFT_ADMIN_PASSWORD:-password}
+      # NOTE: CRAFT_ADMIN_PASSWORD must NOT be set here. Quant Cloud generates it as a
+      # secret (see quant/meta.json) and the portal shows it to you once. Without it, the
+      # first start generates a password and writes it to the container log.
       - CRAFT_ADMIN_EMAIL=${CRAFT_ADMIN_EMAIL:-admin@example.com}
       - CRAFT_SITE_NAME=${CRAFT_SITE_NAME:-Craft CMS}
 
